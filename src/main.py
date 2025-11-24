@@ -212,9 +212,11 @@ def voice_mode(agent: CompanyResearchAgent):
                 
                 if result['success']:
                     response_text = result['response']
-                    print(f"\nHere's what I found:\n{response_text}\n")
+                    print("\nThis is what I found:")
+                    print(f"{response_text}\n")
                     
-                    tts = gTTS(text=response_text, lang='en', slow=False)
+                    spoken_text = f"Here's what I found. {response_text}"
+                    tts = gTTS(text=spoken_text, lang='en', slow=False)
                     audio_buffer = io.BytesIO()
                     tts.write_to_fp(audio_buffer)
                     audio_buffer.seek(0)
