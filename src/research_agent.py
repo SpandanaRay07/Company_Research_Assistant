@@ -139,7 +139,6 @@ class CompanyResearchAgent:
     def research_company(self, query: str, use_multiple_sources: bool = True, ask_user_callback=None, voice_mode: bool = False) -> Dict[str, any]:
         company_name = self._extract_company_name(query)
         
-        print("🔍 Let me gather information from multiple sources...")
         if use_multiple_sources:
             wikipedia_sources = self.wikipedia_agent.get_multiple_sources(company_name, limit=3)
         else:
@@ -287,6 +286,57 @@ Please provide a friendly, conversational answer that:
             return {
                 'success': False,
                 'error': detailed_error,
+                'response': None,
+                'sources': []
+            }
+    
+    def handle_followup(self, query: str, previous_context: List[Dict]) -> Dict[str, any]:
+        if not previous_context:
+            return self.research_company(query, voice_mode=False)
+        
+        last_result = previous_context[-1]
+        company_name = last_result.get('company_name', '')
+        
+        web_results = self.web_search_agent.search_with_query(f"{company_name} {query}", max_results=3)
+        
+        context_summary = "\n".join([ctx.get('response', '')[:300] for ctx in previous_context[-2:]])
+        
+        system_prompt = """You are a friendly and knowledgeable company research assistant. You're having a natural conversation with someone who wants to learn more about a company. Be warm, conversational, and helpful. Answer their follow-up question in a friendly, engaging way."""
+        
+        user_prompt = f"""We've been discussing this company. Here's what we covered earlier:
+{context_summary}
+
+I also found some new information:
+{self.format_sources_context([], [], None, web_results)}
+
+They're now asking: {query}
+
+Please answer their follow-up question in a friendly, conversational way that feels natural and engaging."""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1500
+            )
+            
+            return {
+                'success': True,
+                'query': query,
+                'company_name': company_name,
+                'response': response.choices[0].message.content,
+                'sources': web_results,
+                'sources_count': len(web_results),
+                'is_followup': True
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f"Error: {str(e)}",
                 'response': None,
                 'sources': []
             }
