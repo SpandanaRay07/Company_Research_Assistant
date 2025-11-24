@@ -206,10 +206,10 @@ def voice_mode(agent: CompanyResearchAgent):
                     break
                 
                 print("🔍 Let me find that information for you...")
-                result = agent.research_company(query)
+                result = agent.research_company(query, ask_user_callback=None, voice_mode=True)
                 
                 if result['success']:
-                    response_text = result['response'][:500]
+                    response_text = result['response']
                     print(f"\nHere's what I found:\n{response_text}\n")
                     
                     tts = gTTS(text=response_text, lang='en', slow=False)

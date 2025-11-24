@@ -136,7 +136,7 @@ class CompanyResearchAgent:
                 'error': str(e)
             }
     
-    def research_company(self, query: str, use_multiple_sources: bool = True, ask_user_callback=None) -> Dict[str, any]:
+    def research_company(self, query: str, use_multiple_sources: bool = True, ask_user_callback=None, voice_mode: bool = False) -> Dict[str, any]:
         company_name = self._extract_company_name(query)
         
         print("🔍 Let me gather information from multiple sources...")
@@ -200,7 +200,17 @@ class CompanyResearchAgent:
         if conflicts:
             conflict_note = f"\n\nNote: The following conflicts were detected: {'; '.join(conflicts)}"
         
-        system_prompt = """You are a friendly and knowledgeable company research assistant. You help people learn about companies in a conversational, engaging way. When answering:
+        if voice_mode:
+            system_prompt = """You are a friendly and knowledgeable company research assistant. You help people learn about companies in a conversational, engaging way. When answering:
+- Be warm, friendly, and approachable
+- Use natural, conversational language (like talking to a friend)
+- Keep your response SHORT and CONCISE (2-3 sentences maximum)
+- Focus on the most important information only
+- This will be read aloud, so keep it brief and clear
+- If you find conflicting information, mention it briefly
+- Always be helpful and encouraging"""
+        else:
+            system_prompt = """You are a friendly and knowledgeable company research assistant. You help people learn about companies in a conversational, engaging way. When answering:
 - Be warm, friendly, and approachable
 - Use natural, conversational language (like talking to a friend)
 - Show enthusiasm about interesting facts
@@ -210,7 +220,19 @@ class CompanyResearchAgent:
 - If you find conflicting information, mention it in a helpful, non-alarming way
 - Always be helpful and encouraging"""
         
-        user_prompt = f"""User asked: {query}
+        if voice_mode:
+            user_prompt = f"""User asked: {query}
+
+I've gathered information from multiple sources:
+{context}
+{conflict_note}
+
+Please provide a SHORT, friendly answer (2-3 sentences max) that:
+- Directly addresses what they asked
+- Focuses on the most important information only
+- This will be read aloud, so keep it brief and clear"""
+        else:
+            user_prompt = f"""User asked: {query}
 
 I've gathered information from multiple sources:
 {context}
