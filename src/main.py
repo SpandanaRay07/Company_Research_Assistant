@@ -77,6 +77,8 @@ def chat_mode(agent: CompanyResearchAgent):
             
             is_followup = len(conversation_context) > 0 and not any(cmd in query.lower() for cmd in ['generate plan', 'edit', 'create plan'])
             
+            print("\n🔍 Let me get that information for you...")
+            
             if is_followup:
                 result = agent.handle_followup(query, conversation_context)
             else:
